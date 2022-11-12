@@ -8,6 +8,7 @@ import { Modal } from './Modal/Modal';
 import Loader from './Loader/Loader';
 import Api from 'apiServices/serviceApi';
 
+
 export default function App() {
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,7 +16,9 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
   const [largeImage, setLargeImage] = useState('');
-
+  const [totalPages, setTotalPages] = useState(null);
+  const PER_PAGE = 12;
+  
   const handleSearchSubmit = query => {
     if (searchQuery !== query) {
       setSearchQuery(query);
@@ -43,6 +46,8 @@ export default function App() {
       .fetchGallery(searchQuery, page)
       .then(data => {
         setImages(prevState => [...prevState, ...data.hits]);
+        setTotalPages(Math.ceil(data.totalHits / PER_PAGE));
+        
       })
       .catch(error => console.error(error))
       .finally(() => {
@@ -58,14 +63,14 @@ export default function App() {
     setShowModal(!showModal);
   };
 
-  const isButtonVisible = images.length > 0 && !loading;
+  const isButtonVisible = images.length > page && !loading;
 
   return (
     <div className={s.appDiv}>
       <Searchbar onSearch={handleSearchSubmit} />
       <ImageGallery images={images} onOpenImage={handleOpenLargeImage} />
       {loading && <Loader loading={loading} />}
-      {isButtonVisible && (
+      {isButtonVisible && page < totalPages && (
         <Button onClick={handleAddPage} />
       )}
      {showModal && <Modal onClose={toggleModal} largeImage={largeImage} />}
