@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
 export const Wrap = styled.header`
-
   top: 0;
   left: 0;
   position: sticky;

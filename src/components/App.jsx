@@ -1,129 +1,75 @@
-import React, { Component } from "react";
-//import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
-import Searchbar from './Searchbar/Searchbar';
-import Loader from './Loader/Loader';
-import ImageGallery from './ImageGallery/ImageGallery';
-import Modal from './Modal/Modal';
-import Button from "./Button/Button";
-import ErrorMessage from "./ErrorMessage/ErrorMessage";
-import Api from 'services/serviceApi';
+import { useState, useEffect } from 'react';
+//import ErrorMessage from './ErrorMessage/ErrorMessage';
 import s from './App.module.css';
+import Searchbar from './Searchbar/Searchbar';
+import ImageGallery from './ImageGallery/ImageGallery';
+import Button from './Button/Button';
+import { Modal } from './Modal/Modal';
+import Loader from './Loader/Loader';
+import Api from 'apiServices/serviceApi';
 
-const Status = {
-  IDLE: 'idle',
-  PENDING: 'pending',
-  RESOLVED: 'resolved',
-  REJECTED: 'rejected',
-};
+export default function App() {
+  const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState([]);
+  const [largeImage, setLargeImage] = useState('');
 
-class App extends Component {
-  state = {
-    searchQuery: '',
-    images: [],    
-    page: 1,
-    error: '',
-    bigImage: '',
-    largeImageURL: '',
-    showModal: false,
-    totalHits: 1,
-    contentLoad: false,
-    status: Status.IDLE,
+  const handleSearchSubmit = query => {
+    if (searchQuery !== query) {
+      setSearchQuery(query);
+      setImages([]);
+      setPage(1);
+    }
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    const prevImages = prevState.searchQuery;
-    const nextImages = this.state.searchQuery;
-    const prevPage = prevState.page;
-    const nextPage = this.state.page;
+  const handleOpenLargeImage = imageUrl => {
+    setShowModal(true);
+    setLargeImage(imageUrl);
+  };
 
-    if (prevImages !== nextImages) {
-      this.setState({
-        status: Status.PENDING,
-        page: 1,
-        images: [],
-      });
-      this.fetchGallery(nextImages, nextPage);
-    }
+  const handleAddPage = () => {
+    setPage(prevState => prevState + 1);
+    setLoading(true);
+  };
 
-    if (prevPage !== nextPage && nextPage !== 1) {
-      this.fetchGallery(nextImages, nextPage);
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      return;
     }
-    if (nextPage >= 1) {
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }
-
-  fetchGallery(nextImages, nextPage) {
-    Api.fetchGallery(nextImages, nextPage)
+    setLoading(true);
+    Api
+      .fetchGallery(searchQuery, page)
       .then(data => {
-        this.setState(prevState => {
-          return {
-            totalHits: data.totalHits,
-            prevState,
-            images: [...prevState.images, ...data.hits],
-            status: Status.RESOLVED,
-            searchQuery: nextImages,
-          };
-        });
+        setImages(prevState => [...prevState, ...data.hits]);
       })
-      .catch(error => this.setState({ error, status: Status.REJECTED }));
-  }
+      .catch(error => console.error(error))
+      .finally(() => {
+        setLoading(false);   
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: 'smooth',
+        });
+      });
+  }, [page, searchQuery]);
 
- handleFormSubmit = searchQuery => {
-  this.setState({ searchQuery, page: 1 });
- };
-
- toggleModal = largeImageURL => {
-  this.setState(({ showModal, bigImage }) => ({
-    showModal: !showModal,
-    bigImage: largeImageURL,
-  }));
-};
-
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+  const toggleModal = () => {
+    setShowModal(!showModal);
   };
 
-render() {
-  const { images, bigImage, status } = this.state; 
+  const isButtonVisible = images.length > 0 && !loading;
 
-  if (status === Status.IDLE) {
-    return (
-      <>
-        <Searchbar onSubmit={this.handleFormSubmit} />
-      </>
-    );
-  }
-  if (status === Status.PENDING) {
-    return <Loader />;
-  }
-
-  if (status === Status.REJECTED) {
-    return <ErrorMessage message="Sorry, nothing was found, please try your search again" />;
-  }
-
-  if (status === Status.RESOLVED) {
   return (
     <div className={s.appDiv}>
-       <Searchbar onSubmit={this.handleFormSubmit} />
-      <ImageGallery images={images} toggleModal={this.toggleModal} />
-       
-        {this.state.showModal && (
-            <Modal onClickModal={this.toggleModal} largeImageURL={bigImage} />
-          )}
-          {this.state.images.length !==this.state.totalHits && (
-        // {!contentLoad && <Loader />}
-        <Button onClick={this.handleLoadMore} />
-          )}
+      <Searchbar onSearch={handleSearchSubmit} />
+      <ImageGallery images={images} onOpenImage={handleOpenLargeImage} />
+      {loading && <Loader loading={loading} />}
+      {isButtonVisible && (
+        <Button onClick={handleAddPage} />
+      )}
+     {showModal && <Modal onClose={toggleModal} largeImage={largeImage} />}
     </div>
   );
 }
 
-};
-}
-export default App;

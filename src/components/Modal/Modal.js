@@ -1,42 +1,42 @@
 import { Overley, Container } from './Modal.styled';
-import React, { Component } from 'react';
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-export default class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeyDown);
-  }
+export const Modal = ({ onClose, largeImage }) => {
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-  }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  });
 
-  handleKeyDown = evt => {
+ const handleKeyDown = evt => {
     if (evt.code === 'Escape') {
-      this.props.onClickModal();
+      onClose();
     }
   };
 
-  handleBackdropClick = evt => {
+  const handleBackdropClick = evt => {
     if (evt.currentTarget === evt.target) {
-      this.props.onClickModal();
+      onClose();
     }
   };
 
-  render() {
-    const { largeImageURL } = this.props;
+
     return (
-      <Overley onClick={this.handleBackdropClick}>
+      <Overley onClick={handleBackdropClick}>
         <Container>
-          <img src={largeImageURL} alt="" />
+          <img src={largeImage} alt="" />
         </Container>
       </Overley>
  
     );
-  }
-}
+  };
 
-Modal.propTypes = {
-  //image: PropTypes.string.isRequired,
-  onClick: PropTypes.func,
-};
+  Modal.propTypes = {
+    //image: PropTypes.string.isRequired,
+    onClick: PropTypes.func,
+  };
+
+

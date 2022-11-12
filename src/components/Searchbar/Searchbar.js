@@ -1,45 +1,43 @@
-import { Component } from 'react';
-import { Wrap, Form, Btn, Input } from './Searchbar.styled';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Wrap, Form, Btn, Input } from './Searchbar.styled';
 import { BiSearch } from 'react-icons/bi';
 
-export default class SearchBar extends Component {
-  state = {
-    searchQuery: '',
-    page: 1,
+
+export default function Searchbar({ onSearch }) {
+  const [searchValue, setSearchValue] = useState('');
+
+  const handleChange = ({ target }) => {
+    setSearchValue(target.value);
   };
 
-  handleNameChange = event => {
-    this.setState({ searchQuery: event.currentTarget.value.toLowerCase() });
-  };
-
-  handleSubmit = event => {
+  const handleSubmit = event => {
     event.preventDefault();
 
-    if (this.state.searchQuery.trim() === '') {
-      toast.info('Enter your request.');
+    if (searchValue.trim() === '') {
+      toast.warn('Введите ключевое слово для поиска изображения', {
+        position: toast.POSITION.TOP_LEFT,
+      });
       return;
     }
-
-    this.props.onSubmit(this.state.searchQuery, this.state.page);
-    this.setState({ searchQuery: '', page: 1 });
+    onSearch(searchValue);
+    setSearchValue('');
   };
 
-  render() {
-    return (
-      <div>
+  return (
+<div>
         <Wrap>
-          <Form onSubmit={this.handleSubmit}>
+          <Form onSubmit={handleSubmit}>
             <Btn type="submit">
               <BiSearch size={30}/>                  
             </Btn>
 
             <Input
-              type="text"
-              // name="searchQuery"
-              value={this.state.searchQuery}
-              onChange={this.handleNameChange}
+              type="text"             
+              value={searchValue}
+              onChange={handleChange}
               autoComplete="off"
               autoFocus
               placeholder="Search images and photos"
@@ -48,6 +46,9 @@ export default class SearchBar extends Component {
         </Wrap>
         <ToastContainer autoClose={3000} theme={'colored'} />
       </div>
-    );
-  }
+  );
 }
+
+Searchbar.propTypes = {
+  onSearch: PropTypes.func,
+};

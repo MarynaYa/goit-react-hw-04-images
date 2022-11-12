@@ -2,7 +2,7 @@ import ImageGalleryItem from 'components/ImageGalleryItem/ImageGalleryItem';
 import s from './ImageGallery.module.css';
 import PropTypes from 'prop-types';
 
-function ImageGallery({ images, toggleModal }) {
+function ImageGallery({ images, onOpenImage }) {
     return (
         <ul className={s.galleryList}>
           {images.map(({ id, tags, webformatURL, largeImageURL }) => (
@@ -11,9 +11,7 @@ function ImageGallery({ images, toggleModal }) {
               tags={tags}
               webformatURL={webformatURL}
               largeImageURL={largeImageURL}
-              onClickItem={() => {
-                toggleModal(largeImageURL);
-              }}
+              onOpenImage={onOpenImage}
             />
           ))}
         </ul>
@@ -22,6 +20,6 @@ function ImageGallery({ images, toggleModal }) {
 
 ImageGallery.propTypes = {
     images: PropTypes.array,
-    onClickItem: PropTypes.func,
+    onOpenImage: PropTypes.func,
   };
 export default ImageGallery;
